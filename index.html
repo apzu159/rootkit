@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rootkits en Ciberseguridad</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: none;
+            padding: 60px 80px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #00f5ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
+        }
+
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #00f5ff;
+            text-shadow: 0 0 20px rgba(0, 245, 255, 0.6);
+        }
+
+        h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: #ff00ff;
+        }
+
+        p, li {
+            font-size: 1.3em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+
+        .subtitle {
+            font-size: 1.5em;
+            color: #a0a0a0;
+            margin-top: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 245, 255, 0.3);
+        }
+
+        .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+            margin-top: 30px;
+        }
+
+        .timeline-item {
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -35px;
+            top: 0;
+            width: 15px;
+            height: 15px;
+            background: #00f5ff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.8);
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 15px;
+            width: 2px;
+            height: calc(100% + 15px);
+            background: linear-gradient(to bottom, #00f5ff, transparent);
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            padding-left: 30px;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        ul li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #00f5ff;
+            font-size: 1.5em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(0, 245, 255, 0.2);
+            border-color: #00f5ff;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .danger-box {
+            background: rgba(255, 0, 100, 0.1);
+            border-left: 4px solid #ff0066;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        .success-box {
+            background: rgba(0, 255, 100, 0.1);
+            border-left: 4px solid #00ff66;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        .center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 100%;
+        }
+
+        .logo {
+            font-size: 4em;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .highlight {
+            color: #00f5ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Slide 1: Portada -->
+        <div class="slide active center">
+            <div class="logo">🔒💀</div>
+            <h1>ROOTKITS</h1>
+            <p class="subtitle">La Amenaza Invisible en Ciberseguridad</p>
+            <p style="margin-top: 50px; font-size: 1.1em; color: #a0a0a0;">
+                Instituto de Educación Superior Tecnológico Público "ESPINAR"<br>
+                Seguridad Informática | 2025-II
+            </p>
+        </div>
+
+        <!-- Slide 2: ¿Qué es un Rootkit? -->
+        <div class="slide">
+            <h2>¿Qué es un Rootkit? 🎭</h2>
+            <p style="font-size: 1.5em; margin-bottom: 40px;">
+                Software malicioso diseñado para <span class="highlight">ocultarse</span> en el sistema operativo
+            </p>
+            <div class="grid">
+                <div class="card">
+                    <div class="icon">👻</div>
+                    <h3>Sigilo Total</h3>
+                    <p>Invisible para usuarios y antivirus tradicionales</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🔓</div>
+                    <h3>Acceso Privilegiado</h3>
+                    <p>Control total del sistema operativo</p>
+                </div>
+                <div class="card">
+                    <div class="icon">⏰</div>
+                    <h3>Persistencia</h3>
+                    <p>Sobrevive a reinicios y actualizaciones</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🚪</div>
+                    <h3>Puerta Trasera</h3>
+                    <p>Permite instalar más malware</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Historia -->
+        <div class="slide">
+            <h2>Evolución Histórica 📜</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h3>Años 90 - El Origen</h3>
+                    <p>Herramientas legítimas de administración en UNIX/Linux</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>1999 - Linux Rootkit (LRK)</h3>
+                    <p>Primer uso malicioso documentado</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>2000s - Migración a Windows</h3>
+                    <p>Adaptación para sistemas Windows corporativos</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>2005 - Sony BMG</h3>
+                    <p>Escándalo: rootkit en CDs de música protegidos</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>2008-2012 - Era Moderna</h3>
+                    <p>TDSS/TDL4, ZeroAccess: técnicas avanzadas de ocultamiento</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Niveles de Operación -->
+        <div class="slide">
+            <h2>Niveles de Operación 🎯</h2>
+            <div style="margin-top: 40px;">
+                <div class="card" style="margin-bottom: 25px;">
+                    <h3>🔵 Modo Usuario</h3>
+                    <p>Modifica aplicaciones y bibliotecas del sistema. Más fácil de detectar.</p>
+                </div>
+                <div class="card" style="margin-bottom: 25px;">
+                    <h3>🟠 Modo Kernel</h3>
+                    <p>Opera en el núcleo del sistema operativo. Acceso total y difícil detección.</p>
+                </div>
+                <div class="card">
+                    <h3>🔴 Firmware/BIOS</h3>
+                    <p>Se oculta en el hardware. Extremadamente persistente y peligroso.</p>
+                </div>
+            </div>
+            <div class="danger-box" style="margin-top: 30px;">
+                <p><strong>⚠️ Importante:</strong> Cuanto más profundo el nivel, más difícil es la detección y eliminación</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Métodos de Propagación -->
+        <div class="slide">
+            <h2>¿Cómo se Propagan? 🦠</h2>
+            <div class="grid">
+                <div class="card">
+                    <div class="icon">📧</div>
+                    <h3>Phishing</h3>
+                    <p>Correos maliciosos con archivos adjuntos infectados</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🏴‍☠️</div>
+                    <h3>Software Pirata</h3>
+                    <p>Programas crackeados y keygens comprometidos</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🔓</div>
+                    <h3>Vulnerabilidades</h3>
+                    <p>Exploits que aprovechan fallos de seguridad</p>
+                </div>
+                <div class="card">
+                    <div class="icon">💾</div>
+                    <h3>Dispositivos USB</h3>
+                    <p>Memorias y discos extraíbles infectados</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Impacto y Consecuencias -->
+        <div class="slide">
+            <h2>Consecuencias de la Infección ⚠️</h2>
+            <ul style="margin-top: 40px;">
+                <li><strong>Robo de Información:</strong> Contraseñas, datos bancarios, información confidencial</li>
+                <li><strong>Control Remoto:</strong> El atacante puede controlar el equipo completamente</li>
+                <li><strong>Pérdida de Privacidad:</strong> Monitoreo de actividades y comunicaciones</li>
+                <li><strong>Daño Económico:</strong> Costos de recuperación y pérdida de productividad</li>
+                <li><strong>Compromiso de Red:</strong> Puerta de entrada a toda la infraestructura</li>
+                <li><strong>Imposible Confiar:</strong> El sistema queda comprometido permanentemente</li>
+            </ul>
+            <div class="danger-box" style="margin-top: 30px;">
+                <p><strong>💀 Crítico:</strong> En muchos casos, la única solución segura es reformatear completamente el sistema</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Casos Reales -->
+        <div class="slide">
+            <h2>Casos Históricos Famosos 📰</h2>
+            <div style="margin-top: 40px;">
+                <div class="card" style="margin-bottom: 25px;">
+                    <h3>🎵 Sony BMG Rootkit (2005)</h3>
+                    <p>Sony instaló rootkits en millones de CDs de música para protección anticopia. Escándalo mundial que resultó en demandas millonarias.</p>
+                </div>
+                <div class="card" style="margin-bottom: 25px;">
+                    <h3>💀 TDSS/TDL4 (2008-2011)</h3>
+                    <p>Infectó millones de computadoras, modificaba el MBR y era casi imposible de eliminar. Creó una red botnet masiva.</p>
+                </div>
+                <div class="card">
+                    <h3>⚡ ZeroAccess (2011-2013)</h3>
+                    <p>Infectó más de 2 millones de sistemas para minería de Bitcoin y fraude publicitario. Pérdidas de millones de dólares.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Prevención y Protección -->
+        <div class="slide">
+            <h2>¿Cómo Protegerse? 🛡️</h2>
+            <div class="grid">
+                <div class="card">
+                    <div class="icon">🔄</div>
+                    <h3>Actualizar</h3>
+                    <p>Mantén el SO y software siempre actualizado</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🔍</div>
+                    <h3>Herramientas Especializadas</h3>
+                    <p>Usa software anti-rootkit específico</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🎓</div>
+                    <h3>Educación</h3>
+                    <p>Capacitación constante en ciberseguridad</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🚫</div>
+                    <h3>Precaución</h3>
+                    <p>No instales software de fuentes desconocidas</p>
+                </div>
+            </div>
+            <div class="success-box" style="margin-top: 30px;">
+                <p><strong>✅ Recuerda:</strong> La prevención es la mejor defensa. Una vez infectado, la recuperación es extremadamente difícil.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" onclick="prevSlide()">◀ Anterior</button>
+        <button class="nav-btn" onclick="nextSlide()">Siguiente ▶</button>
+    </div>
+
+    <div class="slide-number">
+        <span id="current-slide">1</span> / 8
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            document.getElementById('current-slide').textContent = currentSlide + 1;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+    </script>
+</body>
+</html>
